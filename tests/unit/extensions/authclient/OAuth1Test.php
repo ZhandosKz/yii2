@@ -11,7 +11,15 @@ class OAuth1Test extends TestCase
 {
 	protected function setUp()
 	{
-		$this->mockApplication([], '\yii\web\Application');
+		$config = [
+			'components' => [
+				'request' => [
+					'hostInfo' => 'http://testdomain.com',
+					'scriptUrl' => '/index.php',
+				],
+			]
+		];
+		$this->mockApplication($config, '\yii\web\Application');
 	}
 
 	/**
@@ -92,7 +100,8 @@ class OAuth1Test extends TestCase
 		$this->assertEquals($expectedAuthorizationHeader, $authorizationHeader);
 	}
 
-	public function testBuildAuthUrl() {
+	public function testBuildAuthUrl()
+	{
 		$oauthClient = new OAuth1();
 		$authUrl = 'http://test.auth.url';
 		$oauthClient->authUrl = $authUrl;

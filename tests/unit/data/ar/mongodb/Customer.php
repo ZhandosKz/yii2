@@ -20,13 +20,14 @@ class Customer extends ActiveRecord
 		];
 	}
 
-	public static function activeOnly($query)
-	{
-		$query->andWhere(['status' => 2]);
-	}
-
 	public function getOrders()
 	{
 		return $this->hasMany(CustomerOrder::className(), ['customer_id' => '_id']);
+	}
+
+	public static function createQuery($config = [])
+	{
+		$config['modelClass'] = get_called_class();
+		return new CustomerQuery($config);
 	}
 }

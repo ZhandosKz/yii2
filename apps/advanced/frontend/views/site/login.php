@@ -5,7 +5,7 @@ use yii\widgets\ActiveForm;
 /**
  * @var yii\web\View $this
  * @var yii\widgets\ActiveForm $form
- * @var app\models\LoginForm $model
+ * @var \common\models\LoginForm $model
  */
 $this->title = 'Login';
 $this->params['breadcrumbs'][] = $this->title;
@@ -25,7 +25,7 @@ $this->params['breadcrumbs'][] = $this->title;
 					If you forgot your password you can <?= Html::a('reset it', ['site/request-password-reset']) ?>.
 				</div>
 				<div class="form-group">
-					<?= Html::submitButton('Login', ['class' => 'btn btn-primary']) ?>
+					<?= Html::submitButton('Login', ['class' => 'btn btn-primary', 'name' => 'login-button']) ?>
 				</div>
 			<?php ActiveForm::end(); ?>
 		</div>

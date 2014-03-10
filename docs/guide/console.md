@@ -2,7 +2,7 @@ Console applications
 ====================
 
 Yii has full featured support of console. Console application structure in Yii is very similar to web application. It
-consists of one or more [[\yii\console\Controller]] (often referred to as commands). Each has one or more actions.
+consists of one or more [[yii\console\Controller]] (often referred to as commands). Each has one or more actions.
 
 Usage
 -----
@@ -13,11 +13,12 @@ You can execute controller action using the following syntax:
 yii <route> [--option1=value1 --option2=value2 ... argument1 argument2 ...]
 ```
 
-For example, `MigrationController::actionCreate()` with `MigrationController::$migrationTable` set can be called from command
-line like the following:
+For example, [[yii\console\controllers\MigrateController::actionCreate()|MigrateController::actionCreate()]]
+with [[yii\console\controllers\MigrateController::$migrationTable|MigrateController::$migrationTable]] set can
+be called from command line like the following:
 
 ```
-yii migreate/create --migrationTable=my_migration
+yii migrate/create --migrationTable=my_migration
 ```
 
 In the above `yii` is console application entry script described below.
@@ -41,11 +42,12 @@ code like the following:
 
 defined('YII_DEBUG') or define('YII_DEBUG', true);
 
-// fcgi doesn't have STDIN defined by default
+// fcgi doesn't have STDIN and STDOUT defined by default
 defined('STDIN') or define('STDIN', fopen('php://stdin', 'r'));
+defined('STDOUT') or define('STDOUT', fopen('php://stdout', 'w'));
 
 require(__DIR__ . '/vendor/autoload.php');
-require(__DIR__ . '/vendor/yiisoft/yii2/yii/Yii.php');
+require(__DIR__ . '/vendor/yiisoft/yii2/Yii.php');
 
 $config = require(__DIR__ . '/config/console.php');
 
@@ -56,16 +58,27 @@ exit($exitCode);
 ```
 
 This script is a part of your application so you're free to adjust it. The `YII_DEBUG` constant can be set `false` if you do
-not want to see stacktrace on error and want to improve overall performance. In both basic and advanced application
+not want to see stack trace on error and want to improve overall performance. In both basic and advanced application
 templates it is enabled to provide more developer-friendly environment.
 
 Configuration
 -------------
 
-As can be seen in the code above, console application uses its own config files named `console.php` so you need to
-configure database connection and the rest of the components you're going to use there in that file. If web and console
-application configs have a lot in common it's a good idea to move matching parts into their own config files as it was
-done in advanced application template.
+As can be seen in the code above, console application uses its own config files named `console.php`. In this file,
+you should specify how to configure various application components and properties.
+
+If your Web application and the console application share a lot of configurations, you may consider moving the common
+part into a separate file, and include this file in both of the application configurations, just as what is done
+in the "advanced" application template.
+
+Sometimes, you may want to run a console command using an application configuration that is different from the one
+specified in the entry script. For example, you may want to use the `yii migrate` command to upgrade your
+test databases which are configured in each individual test suite. To do so, simply specify the custom application configuration
+file via the `appconfig` option, like the following,
+
+```
+yii <route> --appconfig=path/to/config.php ...
+```
 
 
 Creating your own console commands
@@ -78,7 +91,8 @@ you define one or several actions that correspond to the sub-commands of the com
 to implement certain tasks for that particular sub-command.
 
 When running a command, you need to specify the route to the corresponding controller action. For example,
-the route `migrate/create` specifies the sub-command corresponding to the `MigrateController::actionCreate()` action method.
+the route `migrate/create` specifies the sub-command corresponding to the
+[[yii\console\controllers\MigrateController::actionCreate()|MigrateController::actionCreate()]] action method.
 If a route does not contain an action ID, the default action will be executed.
 
 ### Options
@@ -87,6 +101,9 @@ By overriding the [[yii\console\Controller::globalOptions()]] method, you can sp
 to a console command. The method should return a list of public property names of the controller class.
 When running a command, you may specify the value of an option using the syntax `--OptionName=OptionValue`.
 This will assign `OptionValue` to the `OptionName` property of the controller class.
+
+If the default value of an option is of array type, then if you set this option while running the command,
+the option value will be converted into an array by splitting the input string by commas.
 
 ### Arguments
 
@@ -119,5 +136,23 @@ class ExampleController extends \yii\console\Controller
 
 ### Exit Code
 
-Using return codes is the best practice of console application development. If command returns `0` it means everything
-is OK. If it is a number more than zero, we have an error and integer returned is the error code.
+Using exit codes is the best practice of console application development. If a command returns `0` it means
+everything is OK. If it is a number greater than zero, we have an error and the number returned is the error
+code that may be interpreted to find out details about the error.
+For example `1` could stand generally for an unknown error and all codes above are declared for specific cases
+such as input errors, missing files, and so forth.
+
+To have your console command return with an exit code you simply return an integer in the controller action
+method:
+
+```php
+public function actionIndex()
+{
+	if (/* some problem */) {
+		echo "A problem occured!\n";
+		return 1;
+	}
+	// do something
+	return 0;
+}
+```

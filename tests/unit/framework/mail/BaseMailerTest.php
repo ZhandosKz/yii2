@@ -163,7 +163,7 @@ class BaseMailerTest extends TestCase
 
 		$filePath = $this->getTestFilePath();
 
-		$viewName = 'test_view';
+		$viewName = 'test_view2';
 		$viewFileName = $filePath . DIRECTORY_SEPARATOR . $viewName . '.php';
 		$viewFileContent = 'view file content';
 		file_put_contents($viewFileName, $viewFileContent);
@@ -235,12 +235,11 @@ class BaseMailerTest extends TestCase
 	{
 		$message = new Message();
 
-		$mailerMock = $this->getMockBuilder('yiiunit\framework\mail\Mailer')->setMethods(['beforeSend','afterSend'])->getMock();
+		$mailerMock = $this->getMockBuilder('yiiunit\framework\mail\Mailer')->setMethods(['beforeSend', 'afterSend'])->getMock();
 		$mailerMock->expects($this->once())->method('beforeSend')->with($message)->will($this->returnValue(true));
-		$mailerMock->expects($this->once())->method('afterSend')->with($message,true);
+		$mailerMock->expects($this->once())->method('afterSend')->with($message, true);
 		$mailerMock->send($message);
 	}
-
 }
 
 /**

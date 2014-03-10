@@ -8,12 +8,20 @@
  * @license http://www.yiiframework.com/license/
  */
 
-// fcgi doesn't have STDIN defined by default
+// fcgi doesn't have STDIN and STDOUT defined by default
 defined('STDIN') or define('STDIN', fopen('php://stdin', 'r'));
+defined('STDOUT') or define('STDOUT', fopen('php://stdout', 'w'));
 
 define('YII_DEBUG', true);
 
-require(__DIR__ . '/../framework/yii/Yii.php');
+$vendor = __DIR__ . '/../vendor/autoload.php';
+if (file_exists($vendor)) {
+	require($vendor);
+} else {
+	echo "composer autoloader could not be found.\nYou should run `composer install` in repo root directory.\n";
+	exit(1);
+}
+require(__DIR__ . '/../framework/Yii.php');
 
 $application = new yii\console\Application([
 	'id' => 'yii-build',

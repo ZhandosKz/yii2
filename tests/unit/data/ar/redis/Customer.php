@@ -13,20 +13,15 @@ class Customer extends ActiveRecord
 
 	public function attributes()
 	{
-		return ['id', 'email', 'name', 'address', 'status'];
+		return ['id', 'email', 'name', 'address', 'status', 'profile_id'];
 	}
 
 	/**
-	 * @return \yii\redis\ActiveRelation
+	 * @return \yii\redis\ActiveQuery
 	 */
 	public function getOrders()
 	{
 		return $this->hasMany(Order::className(), ['customer_id' => 'id']);
-	}
-
-	public static function active($query)
-	{
-		$query->andWhere(['status' => 1]);
 	}
 
 	public function afterSave($insert)
@@ -34,5 +29,11 @@ class Customer extends ActiveRecord
 		ActiveRecordTest::$afterSaveInsert = $insert;
 		ActiveRecordTest::$afterSaveNewRecord = $this->isNewRecord;
 		parent::afterSave($insert);
+	}
+
+	public static function createQuery($config = [])
+	{
+		$config['modelClass'] = get_called_class();
+		return new CustomerQuery($config);
 	}
 }

@@ -6,8 +6,6 @@ use yii\validators\CompareValidator;
 use yiiunit\data\validators\models\FakedValidationModel;
 use yiiunit\TestCase;
 
-
-
 class CompareValidatorTest extends TestCase
 {
 	protected function setUp()
@@ -162,7 +160,7 @@ class CompareValidatorTest extends TestCase
 			$this->assertTrue(strlen($val->message) > 1);
 		}
 		try {
-			$val = new CompareValidator(['operator' => '<>']);
+			new CompareValidator(['operator' => '<>']);
 		} catch (InvalidConfigException $e) {
 			return;
 		}

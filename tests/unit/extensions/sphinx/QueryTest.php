@@ -161,7 +161,7 @@ class QueryTest extends SphinxTestCase
 
 		$match = 'about';
 		$snippetPrefix = 'snippet#';
-		$snippetCallback = function() use ($match, $snippetPrefix) {
+		$snippetCallback = function () use ($match, $snippetPrefix) {
 			return [
 				$snippetPrefix . '1: ' . $match,
 				$snippetPrefix . '2: ' . $match,
@@ -183,5 +183,16 @@ class QueryTest extends SphinxTestCase
 			$this->assertContains($snippetPrefix, $row['snippet'], 'Snippet source not present!');
 			$this->assertContains($snippetOptions['before_match'] . $match, $row['snippet'] . $snippetOptions['after_match'], 'Options not applied!');
 		}
+	}
+
+	public function testCount()
+	{
+		$connection = $this->getConnection();
+
+		$query = new Query;
+		$count = $query->from('yii2_test_article_index')
+			->match('about')
+			->count('*', $connection);
+		$this->assertEquals(2, $count);
 	}
 }

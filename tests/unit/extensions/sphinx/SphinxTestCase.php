@@ -72,7 +72,7 @@ class SphinxTestCase extends TestCase
 	protected static function loadClassMap()
 	{
 		$baseNameSpace = 'yii/sphinx';
-		$basePath = realpath(__DIR__. '/../../../../extensions/yii/sphinx');
+		$basePath = realpath(__DIR__. '/../../../../extensions/sphinx');
 		$files = FileHelper::findFiles($basePath);
 		foreach ($files as $file) {
 			$classRelativePath = str_replace($basePath, '', $file);
@@ -82,8 +82,8 @@ class SphinxTestCase extends TestCase
 	}
 
 	/**
-	 * @param bool $reset whether to clean up the test database
-	 * @param bool $open whether to open test database
+	 * @param boolean $reset whether to clean up the test database
+	 * @param boolean $open whether to open test database
 	 * @return \yii\sphinx\Connection
 	 */
 	public function getConnection($reset = false, $open = true)
@@ -119,8 +119,8 @@ class SphinxTestCase extends TestCase
 	}
 
 	/**
-	 * @param bool $reset whether to clean up the test database
-	 * @param bool $open whether to open and populate test database
+	 * @param boolean $reset whether to clean up the test database
+	 * @param boolean $open whether to open and populate test database
 	 * @return \yii\db\Connection
 	 */
 	public function getDbConnection($reset = true, $open = true)

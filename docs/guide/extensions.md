@@ -1,61 +1,132 @@
 Extending Yii
 =============
+The Yii framework was designed to be easily extendable. Additional features can be added to your project and then reused, either by yourself on other projects or by sharing your work as a formal Yii extension.
 
 Code style
 ----------
 
-- Extension code style SHOULD be similar to [core framework code style](https://github.com/yiisoft/yii2/wiki/Core-framework-code-style).
-- All classes, methods and properties SHOULD be documented using phpdoc. Note that you can use markdown and link to properties and methods
-using the following syntax: e.g. `[[name()]]`, `[[name\space\MyClass::name()]]`.
-- If you're displaying errors to developers do not translate these (i.e. do not use `\Yii::t()`). Errors should be
-  translated only if they're displayed to end users.
-- Extension SHOULD NOT use class prefixes (i.e. `TbNavBar`, `EMyWidget`, etc.)
-- Extension MUST provide a valid autoloading configuration in `composer.json`. Details can be found in the [composer documentation](http://getcomposer.org/doc/04-schema.md#autoload) or see all [official Yii2 extensions](https://github.com/yiisoft/yii2/tree/master/extensions/yii) for example.
+To be consistent with core Yii conventions, your extensions ought to adhere to certain coding styles:
 
+- Use the [core framework code style](https://github.com/yiisoft/yii2/wiki/Core-framework-code-style).
+- Document classes, methods and properties using [phpdoc](http://www.phpdoc.org/). - Extension classes should *not* be prefixed. Do not use the format `TbNavBar`, `EMyWidget`, etc.
 
+> Note that you can use Markdown within your code for documentation purposes. With Markdown, you can link to properties and methods using the following syntax: `[[name()]]`, `[[namespace\MyClass::name()]]`.
 
-### Namespace and package names
+### Namespace
 
-- Extension MUST use the type `yii2-extension` in `composer.json` file.
-- Extension MUST NOT use `yiisoft` in the composer package name, the composer vendor name or in the namespaces used in the package.
-- Additionally extensions MUST NOT use `yii` or `yii2` in their composer vendor name.
-- Extension MUST NOT have a root-namespace named `\yii`, `\yii2` or `\yiisoft`.
-- Extension SHOULD use namespaces in this format `vendor-name\package` (all lowercase).
-- Extension MAY use `yii2-` in the composer package name (e.g `vendor\yii2-api-adapter` or `vendor\my-yii2-package` (URL).
-- Extension MAY use a `yii2-` prefix in the repository name (URL).
+Yii 2 relies upon namespaces to organize code. (Namespace support was added to PHP in version 5.3.) If you want to use namespaces within your extension,
 
-### Dependencies
+- Do not use `yiisoft` anywhere in your namespaces.
+- Do not use `\yii`, `\yii2` or `\yiisoft` as root namespaces.
+- Namespaces should use the syntax `vendorName\uniqueName`.
 
-- Additional code, eg. libraries, SHOULD be required in your `composer.json` file.
-- When extension is released in a stable version, its requirements SHOULD NOT include `dev` packages that do not have a `stable` release.
-- Use appropriate version constraints, eg. `1.*`, `@stable` for requirements.
+Choosing a unique namespace is important to prevent name collisions, and also results in faster autoloading of classes. Examples of unique, consistent namepacing are:
 
-### Versioning
-
-- Extension SHOULD follow the rules of [semantic versioning](http://semver.org).
-- Use a consistent format for your repository tags, as they are treated as version strings by composer, eg. `0.2.4`,`0.2.5`,`0.3.0`,`1.0.0`.
+- `samdark\wiki`
+- `samdark\debugger`
+- `samdark\googlemap`
 
 Distribution
 ------------
 
-- There should be a `readme.md` file clearly describing what extension does in English, its requirements, how to install
-  and use it. It should be written using markdown. If you want to provide translated readme, name it as `readme_ru.md`
-  where `ru` is your language code. If extension provides a widget it is a good idea to include some screenshots.
-- It is recommended to host your extensions at [Github](github.com).
-- Extension MUST be registered at [Packagist](https://packagist.org).
-- TBD: composer.json
+Beyond the code itself, the entire extension distribution ought to have certain things.
+
+There should be a `readme.md` file, written in English. This file should clearly describe what the extension does, its requirements, how to install it, 
+  and to use it. The README should be written using Markdown. If you want to provide translated README files, name them as `readme_ru.md`
+  where `ru` is your language code (in this case, Russian). 
+  
+  It is a good idea to include some screenshots as part of the documentation, especially if your extension provides a widget. 
+  
+It is recommended to host your extensions at [Github](https://github.com).
+
+Extensions should also be registered at [Packagist](https://packagist.org) in order to be installable via Composer. 
+
+### Composer package name
+
+Choose your extension's package name wisely, as you shouldn't change the package name later on. (Changing the name leads to losing the Composer stats, and makes it impossible for people  to install the package by the old name.) 
+
+If your extension was made specifically for Yii2 (i.e. cannot be used as a standalone PHP library) it is recommended to
+name it like the following:
+
+```
+yii2-my-extension-name-type
+```
+
+Where: 
+
+- `yii2-` is a prefix.
+- The extension name is in all lowercase letters, with words separated by `-`.
+- The `-type` postfix may be `widget`, `behavior`, `module` etc.
+
+### Dependencies
+
+Some extensions you develop may have their own dependencies, such as relying upon other extensions or third-party libraries. When dependencies exist, you should require them in your extension's `composer.json` file. Be certain to also use appropriate version constraints, eg. `1.*`, `@stable` for requirements.
+
+Finally, when your extension is released in a stable version, double-check that its requirements do not include `dev` packages that do not have a `stable` release. In other words, the stable release of your extension should only rely upon stable dependencies.
+
+### Versioning
+
+As you maintain and upgrading your extension, 
+
+- Use the rules of [semantic versioning](http://semver.org).
+- Use a consistent format for your repository tags, as they are treated as version strings by composer, eg. `0.2.4`,
+  `0.2.5`,`0.3.0`,`1.0.0`.
+
+### composer.json
+
+Yii2 uses Composer for installation, and extensions for Yii2 should as well. Towards that end, 
+
+- Use the type `yii2-extension` in `composer.json` file if your extension is Yii-specific.
+- Do not use `yii` or `yii2` as the Composer vendor name.
+- Do not use `yiisoft` in the Composer package name or the Composer vendor name.
+
+If your extension classes reside directly in the repository root directory, you can use the PSR-4 autoloader in the following way in your `composer.json` file:
+
+```
+{
+        "name": "myname/mywidget",
+        "description": "My widget is a cool widget that does everything",
+        "keywords": ["yii", "extension", "widget", "cool"],
+        "homepage": "https://github.com/myname/yii2-mywidget-widget",
+        "type": "yii2-extension",
+        "license": "BSD-3-Clause",
+        "authors": [
+                {
+                        "name": "John Doe",
+                        "email": "doe@example.com"
+                }
+        ],
+        "require": {
+                "yiisoft/yii2": "*"
+        },
+        "autoload": {
+                "psr-4": {
+                        "myname\\mywidget\\": ""
+                }
+        }
+}
+```
+
+In the above, `myname/mywidget` is the package name that will be registered
+at [Packagist](https://packagist.org). It is common for the package name to match your Github repository name.
+
+In the above, the `psr-4` autoloader is specified, mapping the `myname\mywidget` namespace to the root directory where the classes reside.
+
+More details on this syntax can be found in the [Composer documentation](http://getcomposer.org/doc/04-schema.md#autoload).
 
 Working with database
 ---------------------
 
-- If extension creates or modifies database schema always use Yii migrations instead of SQL files or custom scripts.
-- Migrations SHOULD be DBMS agnostic.
-- You MUST NOT make use of active-record model classes in your migrations.
+Extensions sometimes have to use their own database tables. In such situations, 
+
+- If the extension creates or modifies the database schema, always use Yii migrations instead of SQL files or custom scripts.
+- Migrations should be applicable to as many data storages as possible.
+- Do not use Active Record models in your migrations.
 
 Assets
 ------
 
-- Asset files MUST be registered through Bundles.
+- Register assets [through bundles](assets.md).
 
 Events
 ------
@@ -65,16 +136,11 @@ TBD
 i18n
 ----
 
-- Extension SHOULD provide at least one message catalogue with either source or target language in English.
-- Extension MAY provide a configuration for creating message catalogues.
-
-Authorization
--------------
-
-- Auth-items for controllers SHOULD be named after the following format `vendor\ext\controller\action`.
-- Auth-items names may be shortened using an asterisk, eg. `vendor\ext\*`
+- If extension outputs messages intended for end user these should be wrapped into `Yii::t()` in order to be translatable.
+- Exceptions and other developer-oriented message should not be translated.
+- Consider proving `config.php` for `yii message` command to simplify translation.
 
 Testing your extension
 ----------------------
 
-- Extension SHOULD be testable with *PHPUnit*.
+- Consider adding unit tests for PHPUnit.

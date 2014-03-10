@@ -24,27 +24,27 @@ class PhpDocController extends Controller
 	public $defaultAction = 'property';
 
 	/**
-	 * @var bool whether to update class docs directly. Setting this to false will just output docs
+	 * @var boolean whether to update class docs directly. Setting this to false will just output docs
 	 * for copy and paste.
 	 */
 	public $updateFiles = true;
 
 	/**
-	 * Generates @property annotations in class files from getters and setters
+	 * Generates `@property annotations` in class files from getters and setters
 	 *
-	 * Property description will be taken from getter or setter or from an @property annotation
+	 * Property description will be taken from getter or setter or from an `@property annotation`
 	 * in the getters docblock if there is one defined.
 	 *
 	 * See https://github.com/yiisoft/yii2/wiki/Core-framework-code-style#documentation for details.
 	 *
-	 * @param null $root the directory to parse files from. Defaults to YII_PATH.
+	 * @param string $root the directory to parse files from. Defaults to YII_PATH.
 	 */
 	public function actionProperty($root = null)
 	{
 		$except = [];
 		if ($root === null) {
-			$root = dirname(dirname(YII_PATH));
-			$extensionPath = "$root/extensions/yii";
+			$root = dirname(YII_PATH);
+			$extensionPath = "$root/extensions";
 			foreach (scandir($extensionPath) as $extension) {
 				if (ctype_alpha($extension) && is_dir($extensionPath . '/' . $extension)) {
 					Yii::setAlias("@yii/$extension", "$extensionPath/$extension");
@@ -52,10 +52,18 @@ class PhpDocController extends Controller
 			}
 
 			$except = [
+				'.git/',
 				'/apps/',
 				'/build/',
 				'/docs/',
-				'/extensions/yii/composer/',
+				'/extensions/apidoc/helpers/PrettyPrinter.php',
+				'/extensions/codeception/TestCase.php',
+				'/extensions/codeception/DbTestCase.php',
+				'/extensions/composer/',
+				'/extensions/gii/components/DiffRendererHtmlInline.php',
+				'/extensions/twig/TwigSimpleFileLoader.php',
+				'/framework/BaseYii.php',
+				'/framework/Yii.php',
 				'/tests/',
 				'/vendor/',
 			];
@@ -71,13 +79,12 @@ class PhpDocController extends Controller
 				}
 				return null;
 			},
-			'only' => ['.php'],
+			'only' => ['*.php'],
 			'except' => array_merge($except, [
-				'BaseYii.php',
-				'Yii.php',
-				'/views/',
-				'/requirements/',
-				'/gii/generators/',
+				'views/',
+				'requirements/',
+				'gii/generators/',
+				'vendor/',
 			]),
 		];
 		$files = FileHelper::findFiles($root, $options);
@@ -103,6 +110,9 @@ class PhpDocController extends Controller
 		$this->stdout("Updated $nFilesUpdated files.\n");
 	}
 
+	/**
+	 * @inheritdoc
+	 */
 	public function globalOptions()
 	{
 		return array_merge(parent::globalOptions(), ['updateFiles']);
@@ -190,7 +200,7 @@ class PhpDocController extends Controller
 	}
 
 	/**
-	 * replace property annotations in doc comment
+	 * Replace property annotations in doc comment
 	 * @param $doc
 	 * @param $properties
 	 * @return string
@@ -298,13 +308,13 @@ class PhpDocController extends Controller
 					if (isset($prop['get']) && isset($prop['set'])) {
 						if ($prop['get']['type'] != $prop['set']['type']) {
 							$note = ' Note that the type of this property differs in getter and setter.'
-								  . ' See [[get'.ucfirst($propName).'()]] and [[set'.ucfirst($propName).'()]] for details.';
+								  . ' See [[get' . ucfirst($propName) . '()]] and [[set' . ucfirst($propName) . '()]] for details.';  
 						}
 					} elseif (isset($prop['get'])) {
 						// check if parent class has setter defined
 						$c = $className;
 						$parentSetter = false;
-						while($parent = get_parent_class($c)) {
+						while ($parent = get_parent_class($c)) {
 							if (method_exists($parent, 'set' . ucfirst($propName))) {
 								$parentSetter = true;
 								break;
@@ -319,7 +329,7 @@ class PhpDocController extends Controller
 						// check if parent class has getter defined
 						$c = $className;
 						$parentGetter = false;
-						while($parent = get_parent_class($c)) {
+						while ($parent = get_parent_class($c)) {
 							if (method_exists($parent, 'set' . ucfirst($propName))) {
 								$parentGetter = true;
 								break;

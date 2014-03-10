@@ -16,7 +16,7 @@ namespace frontend\widgets;
  * - \Yii::$app->getSession()->setFlash('info', 'This is the message');
  *
  * @author Kartik Visweswaran <kartikv2@gmail.com>
- * @author Alexander Makarov <sam@rmcerative.ru>
+ * @author Alexander Makarov <sam@rmcreative.ru>
  */
 class Alert extends \yii\bootstrap\Widget
 {
@@ -27,18 +27,18 @@ class Alert extends \yii\bootstrap\Widget
 	 * - $value is the bootstrap alert type (i.e. danger, success, info, warning)
 	 */
 	public $alertTypes = [
-		'error'   => 'danger',
-		'danger'  => 'danger',
-		'success' => 'success',
-		'info'    => 'info',
-		'warning' => 'warning'
+		'error'   => 'alert-danger',
+		'danger'  => 'alert-danger',
+		'success' => 'alert-success',
+		'info'    => 'alert-info',
+		'warning' => 'alert-warning'
 	];
-	
+
 	/**
 	 * @var array the options for rendering the close button tag.
 	 */
 	public $closeButton = [];
-	
+
 	public function init()
 	{
 		parent::init();
@@ -46,21 +46,23 @@ class Alert extends \yii\bootstrap\Widget
 		$session = \Yii::$app->getSession();
 		$flashes = $session->getAllFlashes();
 		$appendCss = isset($this->options['class']) ? ' ' . $this->options['class'] : '';
-		
+
 		foreach ($flashes as $type => $message) {
-			/* initialize css class for each alert box */
-			$this->options['class'] = 'alert-' . $this->alertTypes[$type] . $appendCss;
+			if (isset($this->alertTypes[$type])) {
+				/* initialize css class for each alert box */
+				$this->options['class'] = $this->alertTypes[$type] . $appendCss;
 
-			/* assign unique id to each alert box */
-			$this->options['id'] = $this->getId() . '-' . $type;
+				/* assign unique id to each alert box */
+				$this->options['id'] = $this->getId() . '-' . $type;
 
-			echo \yii\bootstrap\Alert::widget([
-				'body' => $message,
-				'closeButton' => $this->closeButton,
-				'options' => $this->options
-			]);
+				echo \yii\bootstrap\Alert::widget([
+					'body' => $message,
+					'closeButton' => $this->closeButton,
+					'options' => $this->options,
+				]);
 
-			$session->removeFlash($type);
+				$session->removeFlash($type);
+			}
 		}
 	}
 }

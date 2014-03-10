@@ -2,7 +2,6 @@
 
 namespace yiiunit\extensions\redis;
 
-use yii\redis\ActiveQuery;
 use yiiunit\data\ar\redis\ActiveRecord;
 use yiiunit\data\ar\redis\Customer;
 use yiiunit\data\ar\redis\OrderItem;
@@ -17,15 +16,45 @@ class ActiveRecordTest extends RedisTestCase
 {
 	use ActiveRecordTestTrait;
 
-	public function callCustomerFind($q = null)	 { return Customer::find($q); }
-	public function callOrderFind($q = null)     { return Order::find($q); }
-	public function callOrderItemFind($q = null) { return OrderItem::find($q); }
-	public function callItemFind($q = null)      { return Item::find($q); }
+	public function callCustomerFind($q = null)
+	{
+		return Customer::find($q);
+	}
 
-	public function getCustomerClass() { return Customer::className(); }
-	public function getItemClass() { return Item::className(); }
-	public function getOrderClass() { return Order::className(); }
-	public function getOrderItemClass() { return OrderItem::className(); }
+	public function callOrderFind($q = null)
+	{
+		return Order::find($q);
+	}
+
+	public function callOrderItemFind($q = null)
+	{
+		return OrderItem::find($q);
+	}
+
+	public function callItemFind($q = null)
+	{
+		return Item::find($q);
+	}
+
+	public function getCustomerClass()
+	{
+		return Customer::className();
+	}
+
+	public function getItemClass()
+	{
+		return Item::className();
+	}
+
+	public function getOrderClass()
+	{
+		return Order::className();
+	}
+
+	public function getOrderItemClass()
+	{
+		return OrderItem::className();
+	}
 
 
 	public function setUp()
@@ -34,13 +63,13 @@ class ActiveRecordTest extends RedisTestCase
 		ActiveRecord::$db = $this->getConnection();
 
 		$customer = new Customer();
-		$customer->setAttributes(['email' => 'user1@example.com', 'name' => 'user1', 'address' => 'address1', 'status' => 1], false);
+		$customer->setAttributes(['email' => 'user1@example.com', 'name' => 'user1', 'address' => 'address1', 'status' => 1, 'profile_id' => 1], false);
 		$customer->save(false);
 		$customer = new Customer();
-		$customer->setAttributes(['email' => 'user2@example.com', 'name' => 'user2', 'address' => 'address2', 'status' => 1], false);
+		$customer->setAttributes(['email' => 'user2@example.com', 'name' => 'user2', 'address' => 'address2', 'status' => 1, 'profile_id' => null], false);
 		$customer->save(false);
 		$customer = new Customer();
-		$customer->setAttributes(['email' => 'user3@example.com', 'name' => 'user3', 'address' => 'address3', 'status' => 2], false);
+		$customer->setAttributes(['email' => 'user3@example.com', 'name' => 'user3', 'address' => 'address3', 'status' => 2, 'profile_id' => 2], false);
 		$customer->save(false);
 
 //		INSERT INTO tbl_category (name) VALUES ('Books');
@@ -63,13 +92,13 @@ class ActiveRecordTest extends RedisTestCase
 		$item->save(false);
 
 		$order = new Order();
-		$order->setAttributes(['customer_id' => 1, 'create_time' => 1325282384, 'total' => 110.0], false);
+		$order->setAttributes(['customer_id' => 1, 'created_at' => 1325282384, 'total' => 110.0], false);
 		$order->save(false);
 		$order = new Order();
-		$order->setAttributes(['customer_id' => 2, 'create_time' => 1325334482, 'total' => 33.0], false);
+		$order->setAttributes(['customer_id' => 2, 'created_at' => 1325334482, 'total' => 33.0], false);
 		$order->save(false);
 		$order = new Order();
-		$order->setAttributes(['customer_id' => 2, 'create_time' => 1325502201, 'total' => 40.0], false);
+		$order->setAttributes(['customer_id' => 2, 'created_at' => 1325502201, 'total' => 40.0], false);
 		$order->save(false);
 
 		$orderItem = new OrderItem();
@@ -208,7 +237,7 @@ class ActiveRecordTest extends RedisTestCase
 	public function testFindColumn()
 	{
 		$this->assertEquals(['user1', 'user2', 'user3'], Customer::find()->column('name'));
-//		TODO $this->assertEquals(['user3', 'user2', 'user1'], Customer::find()->orderBy(['name' => SORT_DESC])->column('name'));
+		// TODO $this->assertEquals(['user3', 'user2', 'user1'], Customer::find()->orderBy(['name' => SORT_DESC])->column('name'));
 	}
 
 	// TODO test serial column incr

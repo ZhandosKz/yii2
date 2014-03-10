@@ -3,7 +3,15 @@ language: php
 php:
   - 5.4
   - 5.5
-#  - hhvm # commented until composer or hhvm get fixed: https://github.com/facebook/hhvm/issues/1347
+  - 5.6
+  - hhvm
+
+# run build against PHP 5.6 and hhvm but allow them to fail
+# http://docs.travis-ci.com/user/build-configuration/#Rows-That-are-Allowed-To-Fail
+matrix:
+  allow_failures:
+    - php: hhvm
+    - php: 5.6
 
 services:
   - redis-server
@@ -14,7 +22,6 @@ services:
 install:
   - composer self-update && composer --version
 # core framework:
-#  - composer require satooshi/php-coveralls 0.6.* --dev --prefer-dist
   - composer install --prefer-dist
   - tests/unit/data/travis/mongodb-setup.sh
   - tests/unit/data/travis/apc-setup.sh
@@ -22,8 +29,18 @@ install:
   - tests/unit/data/travis/cubrid-setup.sh
 # basic application:
   - composer install --dev --prefer-dist -d apps/basic
-  - cd apps/basic && php vendor/bin/codecept build && cd ../..
-  - cd apps && php -S localhost:8080 &
+  - cd apps/basic && composer require --dev codeception/codeception:1.8.*@dev codeception/specify:* codeception/verify:*
+  - php vendor/bin/codecept build && cd ../..
+# advanced application:
+  - composer install --dev --prefer-dist -d apps/advanced
+  - cd apps/advanced && composer require --dev codeception/codeception:1.8.*@dev codeception/specify:* codeception/verify:*
+  - ./init --env=Development
+  - sed -i s/root/travis/ common/config/main-local.php
+  - cd backend && php ../vendor/bin/codecept build
+  - cd ../common && php ../vendor/bin/codecept build
+  - cd ../frontend && php ../vendor/bin/codecept build && cd ../../..
+ # boot server
+  - cd apps && php -S localhost:8080 > /dev/null 2>&1 &
 
 before_script:
   - echo 'elasticsearch version ' && curl http://localhost:9200/
@@ -31,11 +48,21 @@ before_script:
   - psql -U postgres -c 'CREATE DATABASE yiitest;';
   - tests/unit/data/travis/sphinx-setup.sh
   - mongo yii2test --eval 'db.addUser("travis", "test");'
+  - mysql -e 'CREATE DATABASE yii2_advanced_acceptance;';
+  - mysql -e 'CREATE DATABASE yii2_advanced_functional;';
+  - mysql -e 'CREATE DATABASE yii2_advanced_unit;';
+  - cd apps/advanced/frontend/tests/acceptance && php yii migrate --interactive=0
+  - cd ../functional && php yii migrate --interactive=0
+  - cd ../unit && php yii migrate --interactive=0 && cd ../../../../..
 
 script:
-#  - vendor/bin/phpunit --coverage-clover tests/unit/runtime/coveralls/clover.xml --verbose --exclude-group mssql,oci,wincache,xcache,zenddata,vendor
-  - vendor/bin/phpunit --verbose --exclude-group mssql,oci,wincache,xcache,zenddata,vendor
+  - vendor/bin/phpunit --verbose --coverage-clover=coverage.clover --exclude-group mssql,oci,wincache,xcache,zenddata
   - cd apps/basic && php vendor/bin/codecept run
+  - cd ../advanced/backend && ../vendor/bin/codecept run
+  - cd ../common && ../vendor/bin/codecept run
+  - cd ../frontend && ../vendor/bin/codecept run
 
-#after_script:
-#  - php vendor/bin/coveralls
+after_script:
+  - cd ../../..
+  - wget https://scrutinizer-ci.com/ocular.phar
+  - php ocular.phar code-coverage:upload --format=php-clover coverage.clover

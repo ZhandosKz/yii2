@@ -7,7 +7,9 @@
 
 namespace yiiunit\framework\ar;
 
+use yii\base\Event;
 use yii\db\ActiveQueryInterface;
+use yii\db\BaseActiveRecord;
 use yiiunit\TestCase;
 use yiiunit\data\ar\Customer;
 use yiiunit\data\ar\Order;
@@ -145,15 +147,19 @@ trait ActiveRecordTestTrait
 		// scope
 		$this->assertEquals(2, count($this->callCustomerFind()->active()->all()));
 		$this->assertEquals(2, $this->callCustomerFind()->active()->count());
+	}
 
+	public function testFindAsArray()
+	{
 		// asArray
 		$customer = $this->callCustomerFind()->where(['id' => 2])->asArray()->one();
 		$this->assertEquals([
-			'id' => '2',
+			'id' => 2,
 			'email' => 'user2@example.com',
 			'name' => 'user2',
 			'address' => 'address2',
-			'status' => '1',
+			'status' => 1,
+			'profile_id' => null,
 		], $customer);
 	}
 
@@ -178,7 +184,7 @@ trait ActiveRecordTestTrait
 		$this->assertEquals(['user3', 'user2', 'user1'], $this->callCustomerFind()->orderBy(['name' => SORT_DESC])->column('name'));
 	}
 
-	public function testfindIndexBy()
+	public function testFindIndexBy()
 	{
 		$customerClass = $this->getCustomerClass();
 		/** @var TestCase|ActiveRecordTestTrait $this */
@@ -199,9 +205,8 @@ trait ActiveRecordTestTrait
 		$this->assertTrue($customers['3-user3'] instanceof $customerClass);
 	}
 
-	public function testfindIndexByAsArray()
+	public function testFindIndexByAsArray()
 	{
-		$customerClass = $this->getCustomerClass();
 		/** @var TestCase|ActiveRecordTestTrait $this */
 		// indexBy + asArray
 		$customers = $this->callCustomerFind()->asArray()->indexBy('name')->all();
@@ -351,11 +356,11 @@ trait ActiveRecordTestTrait
 		$this->assertEquals(2, $this->callCustomerFind()->where(['OR', ['name' => 'user1'], ['name' => 'user2']])->count());
 		$this->assertEquals(2, count($this->callCustomerFind()->where(['OR', ['name' => 'user1'], ['name' => 'user2']])->all()));
 
-		$this->assertEquals(2, $this->callCustomerFind()->where(['name' => ['user1','user2']])->count());
-		$this->assertEquals(2, count($this->callCustomerFind()->where(['name' => ['user1','user2']])->all()));
+		$this->assertEquals(2, $this->callCustomerFind()->where(['name' => ['user1', 'user2']])->count());
+		$this->assertEquals(2, count($this->callCustomerFind()->where(['name' => ['user1', 'user2']])->all()));
 
-		$this->assertEquals(1, $this->callCustomerFind()->where(['AND', ['name' => ['user2','user3']], ['BETWEEN', 'status', 2, 4]])->count());
-		$this->assertEquals(1, count($this->callCustomerFind()->where(['AND', ['name' => ['user2','user3']], ['BETWEEN', 'status', 2, 4]])->all()));
+		$this->assertEquals(1, $this->callCustomerFind()->where(['AND', ['name' => ['user2', 'user3']], ['BETWEEN', 'status', 2, 4]])->count());
+		$this->assertEquals(1, count($this->callCustomerFind()->where(['AND', ['name' => ['user2', 'user3']], ['BETWEEN', 'status', 2, 4]])->all()));
 	}
 
 	public function testFindNullValues()
@@ -379,9 +384,9 @@ trait ActiveRecordTestTrait
 		$this->assertTrue($this->callCustomerFind()->where(['name' => 'user1'])->exists());
 		$this->assertFalse($this->callCustomerFind()->where(['name' => 'user5'])->exists());
 
-		$this->assertTrue($this->callCustomerFind()->where(['id' => [2,3]])->exists());
-		$this->assertTrue($this->callCustomerFind()->where(['id' => [2,3]])->offset(1)->exists());
-		$this->assertFalse($this->callCustomerFind()->where(['id' => [2,3]])->offset(2)->exists());
+		$this->assertTrue($this->callCustomerFind()->where(['id' => [2, 3]])->exists());
+		$this->assertTrue($this->callCustomerFind()->where(['id' => [2, 3]])->offset(1)->exists());
+		$this->assertFalse($this->callCustomerFind()->where(['id' => [2, 3]])->offset(2)->exists());
 	}
 
 	public function testFindLazy()
@@ -393,6 +398,10 @@ trait ActiveRecordTestTrait
 		$this->assertTrue($customer->isRelationPopulated('orders'));
 		$this->assertEquals(2, count($orders));
 		$this->assertEquals(1, count($customer->relatedRecords));
+
+		// unset
+		unset($customer['orders']);
+		$this->assertFalse($customer->isRelationPopulated('orders'));
 
 		/** @var Customer $customer */
 		$customer = $this->callCustomerFind(2);
@@ -417,11 +426,24 @@ trait ActiveRecordTestTrait
 		$this->assertEquals(1, count($customers[1]->orders));
 		$this->assertEquals(2, count($customers[2]->orders));
 		$this->assertEquals(0, count($customers[3]->orders));
+		// unset
+		unset($customers[1]->orders);
+		$this->assertFalse($customers[1]->isRelationPopulated('orders'));
 
 		$customer = $this->callCustomerFind()->where(['id' => 1])->with('orders')->one();
 		$this->assertTrue($customer->isRelationPopulated('orders'));
 		$this->assertEquals(1, count($customer->orders));
 		$this->assertEquals(1, count($customer->relatedRecords));
+
+		// multiple with() calls
+		$orders = $this->callOrderFind()->with('customer', 'items')->all();
+		$this->assertEquals(3, count($orders));
+		$this->assertTrue($orders[0]->isRelationPopulated('customer'));
+		$this->assertTrue($orders[0]->isRelationPopulated('items'));
+		$orders = $this->callOrderFind()->with('customer')->with('items')->all();
+		$this->assertEquals(3, count($orders));
+		$this->assertTrue($orders[0]->isRelationPopulated('customer'));
+		$this->assertTrue($orders[0]->isRelationPopulated('items'));
 	}
 
 	public function testFindLazyVia()
@@ -478,13 +500,44 @@ trait ActiveRecordTestTrait
 	}
 
 	/**
-	 * Ensure ActiveRelation does preserve order of items on find via()
+	 * Ensure ActiveRelationTrait does preserve order of items on find via()
 	 * https://github.com/yiisoft/yii2/issues/1310
 	 */
 	public function testFindEagerViaRelationPreserveOrder()
 	{
 		/** @var TestCase|ActiveRecordTestTrait $this */
-		$orders = $this->callOrderFind()->with('itemsInOrder1')->orderBy('create_time')->all();
+
+		/*
+		Item (name, category_id)
+		Order (customer_id, created_at, total)
+		OrderItem (order_id, item_id, quantity, subtotal)
+
+		Result should be the following:
+
+		Order 1: 1, 1325282384, 110.0
+		- orderItems:
+			OrderItem: 1, 1, 1, 30.0
+			OrderItem: 1, 2, 2, 40.0
+		- itemsInOrder:
+			Item 1: 'Agile Web Application Development with Yii1.1 and PHP5', 1
+			Item 2: 'Yii 1.1 Application Development Cookbook', 1
+
+		Order 2: 2, 1325334482, 33.0
+		- orderItems:
+			OrderItem: 2, 3, 1, 8.0
+			OrderItem: 2, 4, 1, 10.0
+			OrderItem: 2, 5, 1, 15.0
+		- itemsInOrder:
+			Item 5: 'Cars', 2
+			Item 3: 'Ice Age', 2
+			Item 4: 'Toy Story', 2
+		Order 3: 2, 1325502201, 40.0
+		- orderItems:
+			OrderItem: 3, 2, 1, 40.0
+		- itemsInOrder:
+			Item 3: 'Ice Age', 2
+		 */
+		$orders = $this->callOrderFind()->with('itemsInOrder1')->orderBy('created_at')->all();
 		$this->assertEquals(3, count($orders));
 
 		$order = $orders[0];
@@ -512,7 +565,7 @@ trait ActiveRecordTestTrait
 	// different order in via table
 	public function testFindEagerViaRelationPreserveOrderB()
 	{
-		$orders = $this->callOrderFind()->with('itemsInOrder2')->orderBy('create_time')->all();
+		$orders = $this->callOrderFind()->with('itemsInOrder2')->orderBy('created_at')->all();
 		$this->assertEquals(3, count($orders));
 
 		$order = $orders[0];
@@ -791,4 +844,62 @@ trait ActiveRecordTestTrait
 		$customers = $this->callCustomerFind()->where(['status' => false])->all();
 		$this->assertEquals(1, count($customers));
 	}
+
+	public function testAfterFind()
+	{
+		/** @var BaseActiveRecord $customerClass */
+		$customerClass = $this->getCustomerClass();
+		/** @var BaseActiveRecord $orderClass */
+		$orderClass = $this->getOrderClass();
+		/** @var TestCase|ActiveRecordTestTrait $this */
+
+		$afterFindCalls = [];
+		Event::on(BaseActiveRecord::className(), BaseActiveRecord::EVENT_AFTER_FIND, function ($event) use (&$afterFindCalls) {
+			/** @var BaseActiveRecord $ar */
+			$ar = $event->sender;
+			$afterFindCalls[] = [get_class($ar), $ar->getIsNewRecord(), $ar->getPrimaryKey(), $ar->isRelationPopulated('orders')];
+		});
+
+		$customer = $this->callCustomerFind(1);
+		$this->assertNotNull($customer);
+		$this->assertEquals([[$customerClass, false, 1, false]], $afterFindCalls);
+		$afterFindCalls = [];
+
+		$customer = $this->callCustomerFind()->where(['id' => 1])->one();
+		$this->assertNotNull($customer);
+		$this->assertEquals([[$customerClass, false, 1, false]], $afterFindCalls);
+		$afterFindCalls = [];
+
+		$customer = $this->callCustomerFind()->where(['id' => 1])->all();
+		$this->assertNotNull($customer);
+		$this->assertEquals([[$customerClass, false, 1, false]], $afterFindCalls);
+		$afterFindCalls = [];
+
+		$customer = $this->callCustomerFind()->where(['id' => 1])->with('orders')->all();
+		$this->assertNotNull($customer);
+		$this->assertEquals([
+			[$this->getOrderClass(), false, 1, false],
+			[$customerClass, false, 1, true],
+		], $afterFindCalls);
+		$afterFindCalls = [];
+
+		if ($this instanceof \yiiunit\extensions\redis\ActiveRecordTest) { // TODO redis does not support orderBy() yet
+			$customer = $this->callCustomerFind()->where(['id' => [1, 2]])->with('orders')->all();
+		} else {
+			// orderBy is needed to avoid random test failure
+			$customer = $this->callCustomerFind()->where(['id' => [1, 2]])->with('orders')->orderBy('name')->all();
+		}
+		$this->assertNotNull($customer);
+		$this->assertEquals([
+			[$orderClass, false, 1, false],
+			[$orderClass, false, 2, false],
+			[$orderClass, false, 3, false],
+			[$customerClass, false, 1, true],
+			[$customerClass, false, 2, true],
+		], $afterFindCalls);
+		$afterFindCalls = [];
+
+		Event::off(BaseActiveRecord::className(), BaseActiveRecord::EVENT_AFTER_FIND);
+	}
+
 }

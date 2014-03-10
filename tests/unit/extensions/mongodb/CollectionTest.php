@@ -187,6 +187,60 @@ class CollectionTest extends MongoDbTestCase
 		$this->assertNotEmpty($result[0]['items']);
 	}
 
+	public function testFindAndModify()
+	{
+		$collection = $this->getConnection()->getCollection('customer');
+		$rows = [
+			[
+				'name' => 'customer 1',
+				'status' => 1,
+				'amount' => 100,
+			],
+			[
+				'name' => 'customer 2',
+				'status' => 1,
+				'amount' => 200,
+			],
+		];
+		$collection->batchInsert($rows);
+
+		// increment field
+		$result = $collection->findAndModify(['name' => 'customer 1'], ['$inc' => ['status' => 1]]);
+		$this->assertEquals('customer 1', $result['name']);
+		$this->assertEquals(1, $result['status']);
+		$newResult = $collection->findOne(['name' => 'customer 1']);
+		$this->assertEquals(2, $newResult['status']);
+
+		// $set and return modified document
+		$result = $collection->findAndModify(
+			['name' => 'customer 2'],
+			['$set' => ['status' => 2]],
+			[],
+			['new' => true]
+		);
+		$this->assertEquals('customer 2', $result['name']);
+		$this->assertEquals(2, $result['status']);
+
+		// Full update document
+		$data = [
+			'name' => 'customer 3',
+			'city' => 'Minsk'
+		];
+		$result = $collection->findAndModify(
+			['name' => 'customer 2'],
+			$data,
+			[],
+			['new' => true]
+		);
+		$this->assertEquals('customer 3', $result['name']);
+		$this->assertEquals('Minsk', $result['city']);
+		$this->assertTrue(!isset($result['status']));
+
+		// Test exceptions
+		$this->setExpectedException('\yii\mongodb\Exception');
+		$collection->findAndModify(['name' => 'customer 1'], ['$wrongOperator' => ['status' => 1]]);
+	}
+
 	/**
 	 * @depends testBatchInsert
 	 */
@@ -238,6 +292,55 @@ class CollectionTest extends MongoDbTestCase
 			],
 		];
 		$this->assertEquals($expectedRows, $rows);
+	}
+
+	/**
+	 * @depends testMapReduce
+	 */
+	public function testMapReduceInline()
+	{
+		$collection = $this->getConnection()->getCollection('customer');
+		$rows = [
+			[
+				'name' => 'customer 1',
+				'status' => 1,
+				'amount' => 100,
+			],
+			[
+				'name' => 'customer 2',
+				'status' => 1,
+				'amount' => 200,
+			],
+			[
+				'name' => 'customer 2',
+				'status' => 2,
+				'amount' => 400,
+			],
+			[
+				'name' => 'customer 2',
+				'status' => 3,
+				'amount' => 500,
+			],
+		];
+		$collection->batchInsert($rows);
+
+		$result = $collection->mapReduce(
+			'function () {emit(this.status, this.amount)}',
+			'function (key, values) {return Array.sum(values)}',
+			['inline' => true],
+			['status' => ['$lt' => 3]]
+		);
+		$expectedRows = [
+			[
+				'_id' => 1,
+				'value' => 300,
+			],
+			[
+				'_id' => 2,
+				'value' => 400,
+			],
+		];
+		$this->assertEquals($expectedRows, $result);
 	}
 
 	public function testCreateIndex()
@@ -315,5 +418,49 @@ class CollectionTest extends MongoDbTestCase
 		$result = $collection->fullTextSearch('customer');
 		$this->assertNotEmpty($result);
 		$this->assertCount(2, $result);
+	}
+
+	/**
+	 * @depends testInsert
+	 * @depends testFind
+	 */
+	public function testFindByNotObjectId()
+	{
+		$collection = $this->getConnection()->getCollection('customer');
+
+		$data = [
+			'name' => 'customer 1',
+			'address' => 'customer 1 address',
+		];
+		$id = $collection->insert($data);
+
+		$cursor = $collection->find(['_id' => (string)$id]);
+		$this->assertTrue($cursor instanceof \MongoCursor);
+		$row = $cursor->getNext();
+		$this->assertEquals($id, $row['_id']);
+
+		$cursor = $collection->find(['_id' => 'fake']);
+		$this->assertTrue($cursor instanceof \MongoCursor);
+		$this->assertEquals(0, $cursor->count());
+	}
+
+	/**
+	 * @depends testInsert
+	 *
+	 * @see https://github.com/yiisoft/yii2/issues/2548
+	 */
+	public function testInsertMongoBin()
+	{
+		$collection = $this->getConnection()->getCollection('customer');
+
+		$fileName = realpath(__DIR__ . '/../../../../extensions/gii/assets/logo.png');
+		$data = [
+			'name' => 'customer 1',
+			'address' => 'customer 1 address',
+			'binData' => new \MongoBinData(file_get_contents($fileName), 2),
+		];
+		$id = $collection->insert($data);
+		$this->assertTrue($id instanceof \MongoId);
+		$this->assertNotEmpty($id->__toString());
 	}
 }

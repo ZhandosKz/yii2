@@ -7,7 +7,7 @@ of controlling it.
 Access control basics
 ---------------------
 
-Basic access control is very simple to implement using [[\yii\web\AccessControl]]:
+Basic access control is very simple to implement using [[yii\web\AccessControl]]:
 
 ```php
 class SiteController extends Controller
@@ -38,7 +38,7 @@ class SiteController extends Controller
 
 In the code above we're attaching access control behavior to a controller. Since there's `only` option specified, it
 will be applied to 'login', 'logout' and 'signup' actions only. A set of rules that are basically options for
-[[\yii\web\AccessRule]] reads as follows:
+[[yii\web\AccessRule]] reads as follows:
 
 - Allow all guest (not yet authenticated) users to access 'login' and 'signup' actions.
 - Allow authenticated users to access 'logout' action.
@@ -46,7 +46,7 @@ will be applied to 'login', 'logout' and 'signup' actions only. A set of rules t
 Rules are checked one by one from top to bottom. If rule matches, action takes place immediately. If not, next rule is
 checked. If no rules matched access is denied.
 
-[[\yii\web\AccessRule]] is quite flexible and allows additionally to what was demonstrated checking IPs and request method
+[[yii\web\AccessRule]] is quite flexible and allows additionally to what was demonstrated checking IPs and request method
 (i.e. POST, GET). If it's not enough you can specify your own check via anonymous function:
 
 ```php
@@ -57,15 +57,26 @@ class SiteController extends Controller
 		return [
 			'access' => [
 				'class' => \yii\web\AccessControl::className(),
-				'only' => ['special'],
+				'only' => ['special-callback'],
 				'rules' => [
 					[
-						'actions' => ['special'],
+						'actions' => ['special-callback'],
 						'allow' => true,
 						'matchCallback' => function ($rule, $action) {
 							return date('d-m') === '31-10';
 						}
 					],
+```
+
+And the action:
+
+```php
+	// ...
+	// Match callback called! This page can be accessed only each October 31st
+	public function actionSpecialCallback()
+	{
+		return $this->render('happy-halloween');
+	}
 ```
 
 Sometimes you want a custom action to be taken when access is denied. In this case you can specify `denyCallback`.
@@ -121,7 +132,7 @@ return [
     'manageThing0' => ['type' => Item::TYPE_OPERATION, 'description' => '...', 'bizRule' => NULL, 'data' => NULL],
     'manageThing1' => ['type' => Item::TYPE_OPERATION, 'description' => '...', 'bizRule' => NULL, 'data' => NULL],
     'manageThing2' => ['type' => Item::TYPE_OPERATION, 'description' => '...', 'bizRule' => NULL, 'data' => NULL],
-    'manageThing2' => ['type' => Item::TYPE_OPERATION, 'description' => '...', 'bizRule' => NULL, 'data' => NULL],
+    'manageThing3' => ['type' => Item::TYPE_OPERATION, 'description' => '...', 'bizRule' => NULL, 'data' => NULL],
 
     // AND THE ROLES
     'guest' => [
@@ -198,7 +209,7 @@ public function behaviors()
 }
 ```
 
-Another way is to call [[User::checkAccess()]] where appropriate.
+Another way is to call [[yii\web\User::checkAccess()]] where appropriate.
 
 ### Using DB-based storage for RBAC
 
@@ -206,7 +217,7 @@ Storing RBAC hierarchy in database is less efficient performancewise but is much
 a good management UI for it so in case you need permissions structure that is managed by end user DB is your choice.
 
 In order to get started you need to configure database connection in `db` component. After it is done [get `schema-*.sql`
-file for your database](https://github.com/yiisoft/yii2/tree/master/framework/yii/rbac) and execute it.
+file for your database](https://github.com/yiisoft/yii2/tree/master/framework/rbac) and execute it.
 
 Next step is to configure `authManager` application component in application config file (`web.php` or `main.php`
 depending on template you've used):
@@ -237,7 +248,7 @@ public function editArticle($id)
     throw new NotFoundHttpException;
   }
   if (!\Yii::$app->user->checkAccess('edit_article', ['article' => $article])) {
-    throw new AccessDeniedHttpException;
+    throw new ForbiddenHttpException;
   }
   // ...
 }

@@ -9,6 +9,7 @@ DROP TABLE IF EXISTS tbl_item CASCADE;
 DROP TABLE IF EXISTS tbl_order CASCADE;
 DROP TABLE IF EXISTS tbl_category CASCADE;
 DROP TABLE IF EXISTS tbl_customer CASCADE;
+DROP TABLE IF EXISTS tbl_profile CASCADE;
 DROP TABLE IF EXISTS tbl_type CASCADE;
 DROP TABLE IF EXISTS tbl_null_values CASCADE;
 DROP TABLE IF EXISTS tbl_constraints CASCADE;
@@ -19,12 +20,18 @@ CREATE TABLE tbl_constraints
   field1 varchar(255)
 );
 
+CREATE TABLE tbl_profile (
+  id serial not null primary key,
+  description varchar(128) NOT NULL
+);
+
 CREATE TABLE tbl_customer (
   id serial not null primary key,
   email varchar(128) NOT NULL,
   name varchar(128),
   address text,
-  status integer DEFAULT 0
+  status integer DEFAULT 0,
+  profile_id integer
 );
 
 comment on column public.tbl_customer.email is 'someone@example.com';
@@ -43,7 +50,7 @@ CREATE TABLE tbl_item (
 CREATE TABLE tbl_order (
   id serial not null primary key,
   customer_id integer NOT NULL references tbl_customer(id) on UPDATE CASCADE on DELETE CASCADE,
-  create_time integer NOT NULL,
+  created_at integer NOT NULL,
   total decimal(10,0) NOT NULL
 );
 
@@ -79,9 +86,12 @@ CREATE TABLE tbl_type (
   bool_col2 smallint DEFAULT '1'
 );
 
-INSERT INTO tbl_customer (email, name, address, status) VALUES ('user1@example.com', 'user1', 'address1', 1);
+INSERT INTO tbl_profile (description) VALUES ('profile customer 1');
+INSERT INTO tbl_profile (description) VALUES ('profile customer 3');
+
+INSERT INTO tbl_customer (email, name, address, status, profile_id) VALUES ('user1@example.com', 'user1', 'address1', 1, 1);
 INSERT INTO tbl_customer (email, name, address, status) VALUES ('user2@example.com', 'user2', 'address2', 1);
-INSERT INTO tbl_customer (email, name, address, status) VALUES ('user3@example.com', 'user3', 'address3', 2);
+INSERT INTO tbl_customer (email, name, address, status, profile_id) VALUES ('user3@example.com', 'user3', 'address3', 2, 2);
 
 INSERT INTO tbl_category (name) VALUES ('Books');
 INSERT INTO tbl_category (name) VALUES ('Movies');
@@ -92,9 +102,9 @@ INSERT INTO tbl_item (name, category_id) VALUES ('Ice Age', 2);
 INSERT INTO tbl_item (name, category_id) VALUES ('Toy Story', 2);
 INSERT INTO tbl_item (name, category_id) VALUES ('Cars', 2);
 
-INSERT INTO tbl_order (customer_id, create_time, total) VALUES (1, 1325282384, 110.0);
-INSERT INTO tbl_order (customer_id, create_time, total) VALUES (2, 1325334482, 33.0);
-INSERT INTO tbl_order (customer_id, create_time, total) VALUES (2, 1325502201, 40.0);
+INSERT INTO tbl_order (customer_id, created_at, total) VALUES (1, 1325282384, 110.0);
+INSERT INTO tbl_order (customer_id, created_at, total) VALUES (2, 1325334482, 33.0);
+INSERT INTO tbl_order (customer_id, created_at, total) VALUES (2, 1325502201, 40.0);
 
 INSERT INTO tbl_order_item (order_id, item_id, quantity, subtotal) VALUES (1, 1, 1, 30.0);
 INSERT INTO tbl_order_item (order_id, item_id, quantity, subtotal) VALUES (1, 2, 2, 40.0);

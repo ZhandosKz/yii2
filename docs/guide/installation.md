@@ -3,8 +3,8 @@ Installation
 
 There are two ways you can install the Yii framework:
 
-* Installation via [Composer](http://getcomposer.org/) (recommended)
-* Download an application template packed with all requirements including the Yii Framework
+* Via [Composer](http://getcomposer.org/) (recommended)
+* Download an application template containing all site requirements, including the Yii framework itself
 
 
 Installing via Composer
@@ -75,13 +75,13 @@ php requirements.php
 
 In order to run this script in your browser, you should ensure it is accessable by the webserver and
 access `http://hostname/path/to/yii-app/requirements.php` in your browser.
-If you are using Linux you can create a hard link to make it accessable, using the following command:
+If you are using Linux you can create a soft link to make it accessable, using the following command:
 
 ```
-ln requirements.php ../requirements.php
+ln -s requirements.php ../requirements.php
 ```
 
-For the advanded app the `requirements.php` is two levels up so you have to use `ln requirements.php ../../requirements.php`.
+For the advanded app the `requirements.php` is two levels up so you have to use `ln -s requirements.php ../../requirements.php`.
 
 Yii 2 requires PHP 5.4.0 or higher. Yii has been tested with the [Apache HTTP server](http://httpd.apache.org/) and
 [Nginx HTTP server](http://nginx.org/) on Windows and Linux.

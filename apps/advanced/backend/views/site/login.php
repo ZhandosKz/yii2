@@ -5,7 +5,7 @@ use yii\widgets\ActiveForm;
 /**
  * @var yii\web\View $this
  * @var yii\widgets\ActiveForm $form
- * @var app\models\LoginForm $model
+ * @var \common\models\LoginForm $model
  */
 $this->title = 'Login';
 $this->params['breadcrumbs'][] = $this->title;
@@ -22,7 +22,7 @@ $this->params['breadcrumbs'][] = $this->title;
 				<?= $form->field($model, 'password')->passwordInput() ?>
 				<?= $form->field($model, 'rememberMe')->checkbox() ?>
 				<div class="form-group">
-					<?= Html::submitButton('Login', ['class' => 'btn btn-primary']) ?>
+					<?= Html::submitButton('Login', ['class' => 'btn btn-primary', 'name' => 'login-button']) ?>
 				</div>
 			<?php ActiveForm::end(); ?>
 		</div>

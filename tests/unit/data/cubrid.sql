@@ -9,6 +9,7 @@ DROP TABLE IF EXISTS tbl_item;
 DROP TABLE IF EXISTS tbl_order;
 DROP TABLE IF EXISTS tbl_category;
 DROP TABLE IF EXISTS tbl_customer;
+DROP TABLE IF EXISTS tbl_profile;
 DROP TABLE IF EXISTS tbl_null_values;
 DROP TABLE IF EXISTS tbl_type;
 DROP TABLE IF EXISTS tbl_constraints;
@@ -20,12 +21,19 @@ CREATE TABLE `tbl_constraints`
 );
 
 
+CREATE TABLE `tbl_profile` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `description` varchar(128) NOT NULL,
+  PRIMARY KEY (`id`)
+);
+
 CREATE TABLE `tbl_customer` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `email` varchar(128) NOT NULL,
   `name` varchar(128),
   `address` string,
   `status` int (11) DEFAULT 0,
+  `profile_id` int(11),
   PRIMARY KEY (`id`)
 );
 
@@ -46,7 +54,7 @@ CREATE TABLE `tbl_item` (
 CREATE TABLE `tbl_order` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `customer_id` int(11) NOT NULL,
-  `create_time` int(11) NOT NULL,
+  `created_at` int(11) NOT NULL,
   `total` decimal(10,0) NOT NULL,
   PRIMARY KEY (`id`),
   CONSTRAINT `FK_order_customer_id` FOREIGN KEY (`customer_id`) REFERENCES `tbl_customer` (`id`) ON DELETE CASCADE
@@ -94,9 +102,12 @@ CREATE TABLE `tbl_composite_fk` (
   CONSTRAINT `FK_composite_fk_order_item` FOREIGN KEY (`order_id`,`item_id`) REFERENCES `tbl_order_item` (`order_id`,`item_id`) ON DELETE CASCADE
 );
 
-INSERT INTO tbl_customer (email, name, address, status) VALUES ('user1@example.com', 'user1', 'address1', 1);
+INSERT INTO tbl_profile (description) VALUES ('profile customer 1');
+INSERT INTO tbl_profile (description) VALUES ('profile customer 3');
+
+INSERT INTO tbl_customer (email, name, address, status, profile_id) VALUES ('user1@example.com', 'user1', 'address1', 1, 1);
 INSERT INTO tbl_customer (email, name, address, status) VALUES ('user2@example.com', 'user2', 'address2', 1);
-INSERT INTO tbl_customer (email, name, address, status) VALUES ('user3@example.com', 'user3', 'address3', 2);
+INSERT INTO tbl_customer (email, name, address, status, profile_id) VALUES ('user3@example.com', 'user3', 'address3', 2, 2);
 
 INSERT INTO tbl_category (name) VALUES ('Books');
 INSERT INTO tbl_category (name) VALUES ('Movies');
@@ -107,9 +118,9 @@ INSERT INTO tbl_item (name, category_id) VALUES ('Ice Age', 2);
 INSERT INTO tbl_item (name, category_id) VALUES ('Toy Story', 2);
 INSERT INTO tbl_item (name, category_id) VALUES ('Cars', 2);
 
-INSERT INTO tbl_order (customer_id, create_time, total) VALUES (1, 1325282384, 110.0);
-INSERT INTO tbl_order (customer_id, create_time, total) VALUES (2, 1325334482, 33.0);
-INSERT INTO tbl_order (customer_id, create_time, total) VALUES (2, 1325502201, 40.0);
+INSERT INTO tbl_order (customer_id, created_at, total) VALUES (1, 1325282384, 110.0);
+INSERT INTO tbl_order (customer_id, created_at, total) VALUES (2, 1325334482, 33.0);
+INSERT INTO tbl_order (customer_id, created_at, total) VALUES (2, 1325502201, 40.0);
 
 INSERT INTO tbl_order_item (order_id, item_id, quantity, subtotal) VALUES (1, 1, 1, 30.0);
 INSERT INTO tbl_order_item (order_id, item_id, quantity, subtotal) VALUES (1, 2, 2, 40.0);

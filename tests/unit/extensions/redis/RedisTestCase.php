@@ -6,7 +6,7 @@ use Yii;
 use yii\redis\Connection;
 use yiiunit\TestCase;
 
-Yii::setAlias('@yii/redis', __DIR__ . '/../../../../extensions/yii/redis');
+Yii::setAlias('@yii/redis', __DIR__ . '/../../../../extensions/redis');
 
 /**
  * RedisTestCase is the base class for all redis related test cases
@@ -21,7 +21,7 @@ abstract class RedisTestCase extends TestCase
 			$this->markTestSkipped('No redis server connection configured.');
 		}
 		$connection = new Connection($params);
-		if(!@stream_socket_client($connection->hostname . ':' . $connection->port, $errorNumber, $errorDescription, 0.5)) {
+		if (!@stream_socket_client($connection->hostname . ':' . $connection->port, $errorNumber, $errorDescription, 0.5)) {
 			$this->markTestSkipped('No redis server running at ' . $connection->hostname . ':' . $connection->port . ' : ' . $errorNumber . ' - ' . $errorDescription);
 		}
 
@@ -31,7 +31,7 @@ abstract class RedisTestCase extends TestCase
 	}
 
 	/**
-	 * @param bool $reset whether to clean up the test database
+	 * @param boolean $reset whether to clean up the test database
 	 * @return Connection
 	 */
 	public function getConnection($reset = true)

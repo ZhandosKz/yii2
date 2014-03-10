@@ -1,16 +1,17 @@
 Database basics
 ===============
 
-Yii has a database access layer built on top of PHP's [PDO](http://www.php.net/manual/en/ref.pdo.php). It provides
+Yii has a database access layer built on top of PHP's [PDO](http://www.php.net/manual/en/book.pdo.php). It provides
 uniform API and solves some inconsistencies between different DBMS. By default Yii supports the following DBMS:
 
 - [MySQL](http://www.mysql.com/)
 - [MariaDB](https://mariadb.com/)
 - [SQLite](http://sqlite.org/)
 - [PostgreSQL](http://www.postgresql.org/)
-- [CUBRID](http://www.cubrid.org/) (version 9.1.0 and higher).
+- [CUBRID](http://www.cubrid.org/): version 9.1.0 or higher.
 - [Oracle](http://www.oracle.com/us/products/database/overview/index.html)
-- [MSSQL](https://www.microsoft.com/en-us/sqlserver/default.aspx)
+- [MSSQL](https://www.microsoft.com/en-us/sqlserver/default.aspx): version 2012 or above is required if you
+  want to use LIMIT/OFFSET.
 
 
 Configuration
@@ -52,7 +53,7 @@ After the connection component is configured you can access it using the followi
 $connection = \Yii::$app->db;
 ```
 
-You can refer to [[\yii\db\Connection]] for a list of properties you can configure. Also note that you can define more
+You can refer to [[yii\db\Connection]] for a list of properties you can configure. Also note that you can define more
 than one connection component and use both at the same time if needed:
 
 ```php
@@ -95,7 +96,7 @@ return [
 Basic SQL queries
 -----------------
 
-Once you have a connection instance you can execute SQL queries using [[\yii\db\Command]].
+Once you have a connection instance you can execute SQL queries using [[yii\db\Command]].
 
 ### SELECT
 
@@ -172,8 +173,8 @@ $rowCount = $connection->createCommand($sql)->queryScalar();
 In the code above `[[X]]` will be converted to properly quoted column name while `{{Y}}` will be converted to properly
 quoted table name.
 
-The alternative is to quote table and column names manually using [[\yii\db\Connection::quoteTableName()]] and
-[[\yii\db\Connection::quoteColumnName()]]:
+The alternative is to quote table and column names manually using [[yii\db\Connection::quoteTableName()]] and
+[[yii\db\Connection::quoteColumnName()]]:
 
 ```php
 $column = $connection->quoteColumnName($column);
@@ -209,7 +210,7 @@ $command->execute();
 Transactions
 ------------
 
-If the underlying DBMS supports transactions, you can perform transactional SQL queries like the following:
+You can perform transactional SQL queries like the following:
 
 ```php
 $transaction = $connection->beginTransaction();
@@ -219,16 +220,40 @@ try {
 	// ... executing other SQL statements ...
 	$transaction->commit();
 } catch(Exception $e) {
-	$transaction->rollback();
+	$transaction->rollBack();
 }
 ```
+
+You can also nest multiple transactions, if needed:
+
+```php
+// outer transaction
+$transaction1 = $connection->beginTransaction();
+try {
+	$connection->createCommand($sql1)->execute();
+
+	// inner transaction
+	$transaction2 = $connection->beginTransaction();
+	try {
+		$connection->createCommand($sql2)->execute();
+		$transaction2->commit();
+	} catch (Exception $e) {
+		$transaction2->rollBack();
+	}
+
+	$transaction1->commit();
+} catch (Exception $e) {
+	$transaction1->rollBack();
+}
+```
+
 
 Working with database schema
 ----------------------------
 
 ### Getting schema information
 
-You can get a [[\yii\db\Schema]] instance like the following:
+You can get a [[yii\db\Schema]] instance like the following:
 
 ```php
 $schema = $connection->getSchema();
@@ -240,11 +265,11 @@ It contains a set of methods allowing you to retrieve various information about 
 $tables = $schema->getTableNames();
 ```
 
-For the full reference check [[\yii\db\Schema]].
+For the full reference check [[yii\db\Schema]].
 
 ### Modifying schema
 
-Aside from basic SQL queries [[\yii\db\Command]] contains a set of methods allowing to modify database schema:
+Aside from basic SQL queries [[yii\db\Command]] contains a set of methods allowing to modify database schema:
 
 - createTable, renameTable, dropTable, truncateTable
 - addColumn, renameColumn, dropColumn, alterColumn
@@ -260,7 +285,7 @@ $connection->createCommand()->createTable('tbl_post', [
 	'id' => 'pk',
 	'title' => 'string',
 	'text' => 'text',
-];
+]);
 ```
 
-For the full reference check [[\yii\db\Command]].
+For the full reference check [[yii\db\Command]].

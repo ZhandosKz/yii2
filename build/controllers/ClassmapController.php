@@ -8,6 +8,7 @@
 namespace yii\build\controllers;
 
 use yii\console\Controller;
+use yii\console\Exception;
 use yii\helpers\FileHelper;
 
 /**
@@ -42,18 +43,18 @@ class ClassmapController extends Controller
 				}
 				return null;
 			},
-			'only' => ['.php'],
+			'only' => ['*.php'],
 			'except' => [
-				'Yii.php',
-				'BaseYii.php',
+				'/Yii.php',
+				'/BaseYii.php',
 				'/console/',
 			],
 		];
 		$files = FileHelper::findFiles($root, $options);
 		$map = [];
 		foreach ($files as $file) {
-			if (($pos = strpos($file, $root)) !== 0) {
-				die("Something wrong: $file\n");
+			if (strpos($file, $root) !== 0) {
+				throw new Exception("Something wrong: $file\n");
 			}
 			$path = str_replace('\\', '/', substr($file, strlen($root)));
 			$map[$path] = "\t'yii" . substr(str_replace('/', '\\', $path), 0, -4) . "' => YII_PATH . '$path',";

@@ -7,7 +7,7 @@ namespace yiiunit\data\ar;
  *
  * @property integer $id
  * @property integer $customer_id
- * @property integer $create_time
+ * @property integer $created_at
  * @property string $total
  */
 class Order extends ActiveRecord
@@ -20,6 +20,11 @@ class Order extends ActiveRecord
 	public function getCustomer()
 	{
 		return $this->hasOne(Customer::className(), ['id' => 'customer_id']);
+	}
+
+	public function getCustomer2()
+	{
+		return $this->hasOne(Customer::className(), ['id' => 'customer_id'])->inverseOf('orders2');
 	}
 
 	public function getOrderItems()
@@ -68,7 +73,7 @@ class Order extends ActiveRecord
 	public function beforeSave($insert)
 	{
 		if (parent::beforeSave($insert)) {
-			$this->create_time = time();
+			$this->created_at = time();
 			return true;
 		} else {
 			return false;
